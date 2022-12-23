@@ -12,6 +12,23 @@ static void print_hex(void *data, int num_bytes) {
 	}
 }
 
+void print_msg(int_msg *msg) {
+	printf("type: %d\n", msg->type);
+	printf("modifier: %d\n", msg->modifier);
+	printf("data_sz: %d\n", msg->data_sz);
+	printf("data: %s\n", msg->data);
+}
+
+void parse_msg(char *buff) {
+	int msg_sz = sizeof(int_msg) - sizeof(void *);
+	int_msg *msg = malloc(msg_sz);
+	memcpy(msg, buff, msg_sz);
+	char *data = malloc(msg->data_sz);
+	memcpy(data, buff + msg_sz, msg->data_sz);
+	msg->data = data;
+	print_msg(msg);
+}
+
 int main(int argc, char *argv[]) {
 	int server_fd, new_socket, valread;
 	struct sockaddr_in address;
@@ -51,7 +68,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	valread = read(new_socket, buffer, 1024);
-	print_hex(buffer, 24);
+	parse_msg(buffer);
 	// closing the connected socket
 	close(new_socket);
 	// closing the listening socket
