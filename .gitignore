@@ -2,6 +2,9 @@
 # https://github.com/github/gitignore/blob/main/C.gitignore
 
 #main application
+lp
+middleman
+term.c
 
 # Prerequisites
 *.d
