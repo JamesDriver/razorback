@@ -6,6 +6,9 @@ server
 implant
 term.c
 
+#editor
+.vscode/
+
 #notes
 TODO
 

@@ -1,4 +1,5 @@
 #include "net.h"
+#include "functions/parser.h"
 
 int exec_line(char *line) {
 	fgetc(stdin);
@@ -54,26 +55,32 @@ int send_msg(int_msg *msg, conn *c) {
 }
 
 int main() {
-	char *lp_ip = "127.0.0.1";
-	int lp_port = 8001;
+	command *c = malloc(sizeof(*c));
+	c->exec = &list_implants;
+	c->argc = 0;
+	c->args = NULL;
+	exec_command(c);
 
-	conn *lp_conn = conn_init(lp_ip, lp_port);
-	int_msg *m = malloc(sizeof(*m));
-	fwd_data *f = malloc(sizeof(f));
-	char *fwd_ip = "127.0.0.1";
-	char *words = "hey there stranger";
-	f->port = 8002;
-	f->ip_sz = strlen(fwd_ip);
-	f->data_sz = strlen(words);
-	f->ip = fwd_ip;
-	f->data = words;
+	// char *lp_ip = "127.0.0.1";
+	// int lp_port = 8001;
 
-	m->data = f;
-	m->type = SEND;
-	m->modifier = 0;
-	m->data_sz = FWD_D_STATIC_LEN + f->ip_sz + f->data_sz;
-	send_msg(m, lp_conn);
-	close(lp_conn->fd);
+	// conn *lp_conn = conn_init(lp_ip, lp_port);
+	// int_msg *m = malloc(sizeof(*m));
+	// fwd_data *f = malloc(sizeof(f));
+	// char *fwd_ip = "127.0.0.1";
+	// char *words = "hey there stranger";
+	// f->port = 8002;
+	// f->ip_sz = strlen(fwd_ip);
+	// f->data_sz = strlen(words);
+	// f->ip = fwd_ip;
+	// f->data = words;
+
+	// m->data = f;
+	// m->type = SEND;
+	// m->modifier = 0;
+	// m->data_sz = FWD_D_STATIC_LEN + f->ip_sz + f->data_sz;
+	// send_msg(m, lp_conn);
+	// close(lp_conn->fd);
 	//shell_init();
 	return 0;
 }
