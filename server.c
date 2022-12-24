@@ -39,7 +39,16 @@ int send_msg(int_msg *msg, conn *c) {
 	int offset = sizeof(*msg) - sizeof(msg->data);
 	char *buff = malloc(msg_size);
 	memcpy(buff, msg, offset);
-	memcpy(buff + offset, msg->data, msg->data_sz);
+	if (msg->type == SEND) {
+		fwd_data *f = msg->data;
+		memcpy(buff + offset, f, FWD_D_STATIC_LEN);
+		offset += FWD_D_STATIC_LEN;
+		memcpy(buff + offset, f->ip, f->ip_sz);
+		offset += f->ip_sz;
+		memcpy(buff + offset, f->data, f->data_sz);
+	} else {
+		memcpy(buff + offset, msg->data, msg->data_sz);
+	}
 	send(c->sock, buff, msg_size, 0);
 	return 0;
 }
@@ -50,11 +59,19 @@ int main() {
 
 	conn *lp_conn = conn_init(lp_ip, lp_port);
 	int_msg *m = malloc(sizeof(*m));
+	fwd_data *f = malloc(sizeof(f));
+	char *fwd_ip = "127.0.0.1";
 	char *words = "hey there stranger";
-	m->data = words;
+	f->port = 8002;
+	f->ip_sz = strlen(fwd_ip);
+	f->data_sz = strlen(words);
+	f->ip = fwd_ip;
+	f->data = words;
+
+	m->data = f;
 	m->type = SEND;
-	m->modifier = 87;
-	m->data_sz = strlen(words);
+	m->modifier = 0;
+	m->data_sz = FWD_D_STATIC_LEN + f->ip_sz + f->data_sz;
 	send_msg(m, lp_conn);
 	close(lp_conn->fd);
 	//shell_init();

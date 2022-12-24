@@ -19,6 +19,44 @@ void print_msg(int_msg *msg) {
 	printf("data: %s\n", msg->data);
 }
 
+fwd_data *parse_send(char *data) {
+	if (!data) {
+		return NULL;
+	}
+
+	fwd_data *f = malloc(sizeof(*f));
+	if (!f) {
+		return NULL;
+	}
+	memcpy(f, data, FWD_D_STATIC_LEN);
+
+	char *ip = malloc(f->ip_sz);
+	if (!ip) {
+		free(f);
+		return NULL;
+	}
+
+	char *tmp_data = malloc(f->data_sz);
+	if (!tmp_data) {
+		free(f);
+		free(ip);
+		return NULL;
+	}
+
+	memcpy(ip, data + FWD_D_STATIC_LEN, f->ip_sz);
+	memcpy(tmp_data, data + FWD_D_STATIC_LEN + f->ip_sz, f->data_sz);
+	f->ip = ip;
+	f->data = tmp_data;
+	return f;
+}
+
+int forward_data(char *data) {
+	fwd_data *fwd = parse_send(data);
+	conn *c = conn_init(fwd->ip, fwd->port);
+	send(c->sock, fwd->data, fwd->data_sz, 0);
+	return 0;
+}
+
 void parse_msg(char *buff) {
 	int msg_sz = sizeof(int_msg) - sizeof(void *);
 	int_msg *msg = malloc(msg_sz);
@@ -26,6 +64,9 @@ void parse_msg(char *buff) {
 	char *data = malloc(msg->data_sz);
 	memcpy(data, buff + msg_sz, msg->data_sz);
 	msg->data = data;
+	if (msg->type == SEND) {
+		forward_data(msg->data);
+	}
 	print_msg(msg);
 }
 

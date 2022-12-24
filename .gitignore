@@ -2,9 +2,12 @@
 # https://github.com/github/gitignore/blob/main/C.gitignore
 
 #main application
-lp
-middleman
+server
+implant
 term.c
+
+#notes
+TODO
 
 # Prerequisites
 *.d
