@@ -1,11 +1,14 @@
 #ifndef CLPARSE_H
 #define CLPARSE_H
 
-#include "list.h"
+#include "func.h"
 
 #include <stdlib.h>
 
-//static int (*funcs[])(int argc, char **args) = { &list_implants };
+static int (*funcs[])(int argc, char **args) = { &list_implants };
+//&use_implant
+//&name_implant
+static char *func_names[] = { "implants" };
 
 enum {
 	FUNCS_CAP = 4,
@@ -25,10 +28,8 @@ typedef struct {
 	char **args; //args
 } command;
 
-// commands *init_commands();
-
 command *parse_command();
 
-int *exec_command(command *c);
+int exec_command(command *c);
 
 #endif

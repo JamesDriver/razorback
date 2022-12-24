@@ -46,7 +46,7 @@ typedef struct {
 	uint16_t type; //type of internal message
 	uint16_t modifier; //modifier for the type (conn id for instance)
 	uint32_t data_sz; //size of data
-	char *data; //data
+	void *data; //data
 } int_msg; //internal message between lp and middleman
 
 typedef struct {

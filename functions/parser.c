@@ -18,8 +18,11 @@
 // 	}
 // }
 
-int *exec_command(command *c) {
+int exec_command(command *c) {
 	return (c->exec)(c->argc, c->args);
+}
+
+command *parse_command() {
 }
 
 // char *lsh_read_line(void) {

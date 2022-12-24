@@ -1,4 +1,4 @@
-#include "list.h"
+#include "func.h"
 #include <stdio.h>
 
 int list_implants(int argc, char **argv) {
