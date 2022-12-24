@@ -1,8 +1,8 @@
-all: lp middleman
+all: implant server
 
-lp: lp.c net.o
+server: server.c net.o
 
-middleman: middleman.c net.o
+implant: implant.c net.o
 
 clean:
-	rm -f *.o lp middleman
+	rm -f *.o implant server
