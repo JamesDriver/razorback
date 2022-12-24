@@ -58,7 +58,7 @@ int main() {
 	command *c = malloc(sizeof(*c));
 	c->exec = &list_implants;
 	c->argc = 0;
-	c->args = NULL;
+	c->argv = NULL;
 	exec_command(c);
 
 	// char *lp_ip = "127.0.0.1";

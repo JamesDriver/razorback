@@ -4,14 +4,20 @@
 #include "func.h"
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-static int (*funcs[])(int argc, char **args) = { &list_implants };
+#define DELIM " \t\r\n\a"
+
+static int (*funcs[])(int argc, char **argv) = { &list_implants };
 //&use_implant
 //&name_implant
-static char *func_names[] = { "implants" };
+static char *func_names[] = { "implant list", "implant use", "implant name" };
 
 enum {
 	FUNCS_CAP = 4,
+	CL_BUFF_SZ = 64,
+	TOKENS_CT = 8,
 };
 
 // typedef struct {
@@ -23,9 +29,9 @@ enum {
 Parse and execute command line input
 */
 typedef struct {
-	int (*exec)(int argc, char **args); //function to execute with arguments
+	int (*exec)(int argc, char **argv); //function to execute with arguments
 	int argc; //arg count
-	char **args; //args
+	char **argv; //args
 } command;
 
 command *parse_command();
