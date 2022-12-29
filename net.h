@@ -9,16 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-
-enum { //status codes
-	SUCCESS,
-	NULL_CONN,
-	NULL_MSG,
-	INVALID_MSG_TYPE,
-	INVALID_MSG_MODIFIER,
-	INVALID_MSG_SZ,
-	INVALID_MSG_DATA
-};
+#include "helpers/err.h"
 
 enum { //message types
 	OPEN,

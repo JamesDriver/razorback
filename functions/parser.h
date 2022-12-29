@@ -2,17 +2,12 @@
 #define CLPARSE_H
 
 #include "func.h"
-
+#include "../helpers/err.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #define DELIM " \t\r\n\a"
-
-static int (*funcs[])(int argc, char **argv) = { &list_implants };
-//&use_implant
-//&name_implant
-static char *func_names[] = { "implant list", "implant use", "implant name" };
 
 enum {
 	FUNCS_CAP = 4,

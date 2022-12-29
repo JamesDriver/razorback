@@ -12,13 +12,15 @@ char *read_line() {
 
 void shell_init(void) {
 	printf("Welcome to Razorback, a tunneling framework written in C.\n");
-	char *line;
 	int status;
 	while (1) {
 		printf(">");
-		line = read_line();
-		int status = exec_line(line);
-		//free(line);
+		command *c = parse_command();
+		if (c) {
+			exec_command(c);
+		} else {
+			printf("command not found: \n");
+		}
 	}
 }
 
@@ -55,11 +57,12 @@ int send_msg(int_msg *msg, conn *c) {
 }
 
 int main() {
-	command *c = malloc(sizeof(*c));
-	c->exec = &list_implants;
-	c->argc = 0;
-	c->argv = NULL;
-	exec_command(c);
+	shell_init();
+	// command *c = malloc(sizeof(*c));
+	// c->exec = funcs[0];
+	// c->argc = 0;
+	// c->argv = NULL;
+	// exec_command(c);
 
 	// char *lp_ip = "127.0.0.1";
 	// int lp_port = 8001;

@@ -19,8 +19,16 @@
 // }
 
 int exec_command(command *c) {
+	if (!c) {
+		return NULL_CMD;
+	}
+	if (!c->exec) {
+		return NULL_CMD_EXEC;
+	}
 	return (c->exec)(c->argc, c->argv);
 }
+
+// char *get_line() {}
 
 command *parse_command() {
 	int buff_sz = CL_BUFF_SZ;
@@ -61,12 +69,12 @@ command *parse_command() {
 	char *token;
 	char **tokens = malloc(sizeof(char *) * TOKENS_CT);
 	int t_cap = TOKENS_CT, t_idx = 0;
-	for (int i = 0; i < sizeof(func_names) / sizeof(func_names[0]); i++) {
+	for (int i = 0; i < func_ct; i++) {
 		int func_len = strlen(func_names[0]);
 		if (func_len > pos) {
 			continue;
 		}
-		if (strncmp(func_names[i], buff, func_len)) {
+		if (0 == strncmp(func_names[i], buff, func_len)) {
 			pos = 0;
 			c = malloc(sizeof(*c));
 			c->exec = funcs[i];
@@ -90,6 +98,7 @@ command *parse_command() {
 			}
 			c->argc = t_idx;
 			c->argv = tokens;
+			break;
 		}
 	}
 	return c;
