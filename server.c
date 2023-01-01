@@ -1,5 +1,6 @@
 #include "net.h"
 #include "functions/parser.h"
+#include "termios.h"
 
 int exec_line(char *line) {
 	fgetc(stdin);
@@ -14,12 +15,22 @@ void shell_init(void) {
 	printf("Welcome to Razorback, a tunneling framework written in C.\n");
 	int status;
 	while (1) {
-		printf(">");
-		command *c = parse_command();
+		printf("> ");
+		char *line = get_line();
+		if (!line) {
+			printf("Invalid Input\n");
+			continue;
+		}
+		if (strlen(line) == 0) {
+			continue;
+		}
+		command *c = parse_command(line);
 		if (c) {
 			exec_command(c);
+			continue;
 		} else {
-			printf("command not found: \n");
+			printf("command not found: %s\n", line);
+			continue;
 		}
 	}
 }
@@ -57,33 +68,14 @@ int send_msg(int_msg *msg, conn *c) {
 }
 
 int main() {
+	// set stdin to stop buffering
+	static struct termios oldtio, newtio;
+	tcgetattr(0, &oldtio);
+	newtio = oldtio;
+	newtio.c_lflag &= ~ICANON;
+	newtio.c_lflag &= ~ECHO;
+	tcsetattr(0, TCSANOW, &newtio);
+
 	shell_init();
-	// command *c = malloc(sizeof(*c));
-	// c->exec = funcs[0];
-	// c->argc = 0;
-	// c->argv = NULL;
-	// exec_command(c);
-
-	// char *lp_ip = "127.0.0.1";
-	// int lp_port = 8001;
-
-	// conn *lp_conn = conn_init(lp_ip, lp_port);
-	// int_msg *m = malloc(sizeof(*m));
-	// fwd_data *f = malloc(sizeof(f));
-	// char *fwd_ip = "127.0.0.1";
-	// char *words = "hey there stranger";
-	// f->port = 8002;
-	// f->ip_sz = strlen(fwd_ip);
-	// f->data_sz = strlen(words);
-	// f->ip = fwd_ip;
-	// f->data = words;
-
-	// m->data = f;
-	// m->type = SEND;
-	// m->modifier = 0;
-	// m->data_sz = FWD_D_STATIC_LEN + f->ip_sz + f->data_sz;
-	// send_msg(m, lp_conn);
-	// close(lp_conn->fd);
-	//shell_init();
 	return 0;
 }

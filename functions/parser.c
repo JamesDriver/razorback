@@ -28,9 +28,49 @@ int exec_command(command *c) {
 	return (c->exec)(c->argc, c->argv);
 }
 
-// char *get_line() {}
+void autocomplete(char *buff, int sz) {
+	printf("h");
+	if (!buff) {
+		return;
+	}
+	if (sz < 1) {
+		return;
+	}
+	char **words = malloc(sizeof(*words) * 8);
+	if (!words) {
+		return;
+	}
+	size_t idx = 0, cap = 8;
+	for (int i = 0; i < func_ct; i++) {
+		if (strlen(func_names[i]) < sz) {
+			continue;
+		}
+		if (0 == strncmp(buff, func_names[i], sz)) {
+			if (idx == cap) {
+				cap *= 2;
+				char **tmp =
+					realloc(words, sizeof(*words) * cap);
+				if (!tmp) {
+					free(words);
+					return;
+				}
+				words = tmp;
+			}
+			words[idx] = func_names[i];
+			idx++;
+		}
+	}
+	printf("h\n");
+	if (idx = 1) {
+		printf("%s", words[0]);
+	}
+	if (idx > 1) {
+		return;
+	}
+	free(words);
+}
 
-command *parse_command() {
+char *get_line() {
 	int buff_sz = CL_BUFF_SZ;
 	int pos = 0;
 	char *buff = malloc(sizeof(char) * buff_sz);
@@ -39,17 +79,37 @@ command *parse_command() {
 	if (!buff) {
 		return NULL;
 	}
-
+	fflush(stdout);
 	while (1) {
 		ch = getchar();
-
+		// printf("|%d|\n", ch);
+		//if backspace
+		//if tab --autocomplete
 		if (ch == EOF) {
 			free(buff);
 			return NULL;
-		} else if (ch == '\n') {
+		} else if (ch == '\t') {
+			autocomplete(buff, pos);
+		} else if (ch == 127) {
+			if (pos < 1) {
+				continue;
+			}
+			printf("\b");
+			printf(" ");
+			printf("\b");
+			pos--;
 			buff[pos] = '\0';
+			continue;
+		}
+		// if (input[i + 2] == 'A') {
+		// 	upArrow = 1;
+		// }
+		else if (ch == '\n') {
+			buff[pos] = '\0';
+			printf("\n");
 			break;
 		} else {
+			printf("%c", ch);
 			buff[pos] = ch;
 		}
 		pos++;
@@ -64,7 +124,14 @@ command *parse_command() {
 			buff = tmp;
 		}
 	}
+	return buff;
+}
 
+command *parse_command(char *buff) {
+	if (!buff) {
+		return NULL;
+	}
+	int pos = strlen(buff);
 	command *c = NULL;
 	char *token;
 	char **tokens = malloc(sizeof(char *) * TOKENS_CT);

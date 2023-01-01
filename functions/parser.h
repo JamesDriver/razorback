@@ -15,19 +15,13 @@ enum {
 	TOKENS_CT = 8,
 };
 
-// typedef struct {
-// 	int (**funcs)(int argc, char **args);
-// 	size_t idx;
-// 	size_t cap;
-// } commands;
-/*
-Parse and execute command line input
-*/
 typedef struct {
 	int (*exec)(int argc, char **argv); //function to execute with arguments
 	int argc; //arg count
 	char **argv; //args
 } command;
+
+char *get_line(); //read line from stdin
 
 command *parse_command();
 
