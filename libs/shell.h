@@ -1,12 +1,12 @@
-#ifndef CLPARSE_H
-#define CLPARSE_H
+#ifndef SHELL_H
+#define SHELL_H
 
 #include "func.h"
-#include "../helpers/err.h"
+#include "err.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "termios.h"
 #define DELIM " \t\r\n\a"
 
 enum {
@@ -21,10 +21,6 @@ typedef struct {
 	char **argv; //args
 } command;
 
-char *get_line(); //read line from stdin
-
-command *parse_command();
-
-int exec_command(command *c);
+void shell_init(void);
 
 #endif

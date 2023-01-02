@@ -1,5 +1,4 @@
 #include "func.h"
-#include <stdio.h>
 
 int disp_help(int argc, char **argv) {
 	printf("Available Commands: \n");
@@ -19,7 +18,6 @@ int use_implant(int argc, char **argv) {
 }
 
 int server_listen(int argc, char **argv) {
-	printf("listening");
 	return 0;
 }
 

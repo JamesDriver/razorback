@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "helpers/err.h"
+#include "err.h"
 
 enum { //message types
 	OPEN,

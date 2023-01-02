@@ -1,8 +1,8 @@
 all: implant server
 
-server: server.c net.o functions/parser.o functions/func.o
+server: server.c libs/shell.o libs/func.o libs/net.o
 
-implant: implant.c net.o
+implant: implant.c libs/net.o
 
 clean:
-	rm -f *.o implant server functions/*.o
+	rm -f *.o implant server libs/*.o

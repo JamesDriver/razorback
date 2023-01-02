@@ -1,7 +1,9 @@
 #ifndef FUNC_H
 #define FUNC_H
 
-#include "../helpers/err.h"
+#include "err.h"
+#include "net.h"
+#include <stdio.h>
 
 int disp_help(int argc, char **argv);
 
