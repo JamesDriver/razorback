@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include "termios.h"
 #define DELIM " \t\r\n\a"
 
 enum {
-	FUNCS_CAP = 4,
+	FUNCS_CAP  = 4,
 	CL_BUFF_SZ = 64,
-	TOKENS_CT = 8,
+	TOKENS_CT  = 8,
 };
 
 typedef struct {

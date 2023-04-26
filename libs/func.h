@@ -4,6 +4,7 @@
 #include "err.h"
 #include "net.h"
 #include <stdio.h>
+#include <unistd.h>
 
 int disp_help(int argc, char **argv);
 

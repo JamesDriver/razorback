@@ -1,16 +1,13 @@
 #include "shell.h"
 
 void shell_init(void);
-
 static char *get_line(void);
-
 static int exec_command(command *c);
-
 static void autocomplete(char *buff, int *sz, int *pos);
-
 static command *parse_command(char *buff);
 
-void shell_init(void) {
+void shell_init(void)
+{
 	// set stdin to stop buffering
 	static struct termios oldtio, newtio;
 	tcgetattr(0, &oldtio);
@@ -43,7 +40,42 @@ void shell_init(void) {
 	tcsetattr(0, TCSANOW, &oldtio);
 }
 
-static int exec_command(command *c) {
+static void signalHandler(int sig)
+{
+	int pid;
+	int status;
+	pid = waitpid(-1, &status, WNOHANG);
+	broadcastTermination(pid, status);
+}
+
+void sh_start(void)
+{
+	char *line;
+	char *test;
+	char **args;
+	int status;
+	signal(SIGCHLD, signalHandler);
+	do {
+		int v = 1;
+		printf(ANSI_COLOR_MAGENTA);
+		printf("%s", shell_temp_Name);
+		printf(ANSI_COLOR_RESET);
+
+		line = sh_read_line();
+		test = (char *)malloc(sizeof(char *) * (strlen(line)));
+
+		strcpy(test, line);
+
+		args   = sh_split_line(line);
+		status = sh_execute(args, test);
+
+		free(line);
+		free(args);
+	} while (status);
+}
+
+static int exec_command(command *c)
+{
 	if (!c) {
 		return NULL_CMD;
 	}
@@ -53,7 +85,8 @@ static int exec_command(command *c) {
 	return (c->exec)(c->argc, c->argv);
 }
 
-static void autocomplete(char *buff, int *sz, int *pos) {
+static void autocomplete(char *buff, int *sz, int *pos)
+{
 	if (!buff || !sz || !pos) {
 		return;
 	}
@@ -94,19 +127,21 @@ static void autocomplete(char *buff, int *sz, int *pos) {
 				return;
 			}
 			buff = tmp;
-			*sz = *pos + w_sz + 1;
+			*sz  = *pos + w_sz + 1;
 		}
 		strncat(buff, words[0] + *pos, w_sz);
 	}
 	if (idx > 1) {
+		//TODO: print possible options
 	}
 	free(words);
 }
 
-static char *get_line(void) {
+static char *get_line(void)
+{
 	int buff_sz = CL_BUFF_SZ;
-	int pos = 0;
-	char *buff = malloc(sizeof(char) * buff_sz);
+	int pos	    = 0;
+	char *buff  = malloc(sizeof(char) * buff_sz);
 	int ch;
 
 	if (!buff) {
@@ -114,7 +149,7 @@ static char *get_line(void) {
 	}
 	fflush(stdout);
 	while (1) {
-		fflush(stdout);
+		fflush(stdout); //reste between lines
 		ch = getchar();
 		if (ch == EOF) {
 			free(buff);
@@ -155,11 +190,12 @@ static char *get_line(void) {
 	return buff;
 }
 
-static command *parse_command(char *buff) {
+static command *parse_command(char *buff)
+{
 	if (!buff) {
 		return NULL;
 	}
-	int pos = strlen(buff);
+	int pos	   = strlen(buff);
 	command *c = NULL;
 	char *token;
 	char **tokens = malloc(sizeof(char *) * TOKENS_CT);
@@ -170,10 +206,10 @@ static command *parse_command(char *buff) {
 			continue;
 		}
 		if (0 == strncmp(func_names[i], buff, func_len)) {
-			pos = 0;
-			c = malloc(sizeof(*c));
+			pos	= 0;
+			c	= malloc(sizeof(*c));
 			c->exec = funcs[i];
-			token = strtok(buff, DELIM);
+			token	= strtok(buff, DELIM);
 			while (token != NULL) {
 				tokens[t_idx] = token;
 				t_idx++;
