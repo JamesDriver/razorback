@@ -1,16 +1,24 @@
 CFLAGS += -Wall -Wextra -Wpedantic
 CFLAGS += -Wvla -Wwrite-strings -Waggregate-return -Wfloat-equal
-LDFLAGS += -ldl
+LDFLAGS += -ldl -L. -lldtest
 
-all: server modules/test1.so modules/test2.so
+all: libldtest.a loader modules/test1.so modules/test2.so
+
+libldtest.a: libldtest.a(test.o)
+
+
 
 %.so: %.c
 	$(CC) -shared -fPIC $(CFLAGS) -o $@ $<
 
 implant: implant.c libs/net.o
 
+.PHONY: debug
+debug: CFLAGS += -g3 -O0
+debug: all
+
 clean:
-	rm -f *.o implant server libs/*.o modules/*.so
+	rm -f *.o implant server loader libs/*.o modules/*.so
 
 
 

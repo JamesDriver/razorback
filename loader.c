@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <dirent.h>
 #include <errno.h>
+#include "test.h"
 
 typedef int (*ModuleFunc)(int argc, char **argv);
 typedef struct {
@@ -141,7 +142,9 @@ int main(void)
 			fprintf(stderr, "Error: %s\n", dlerror());
 			goto cleanup;
 		}
+		funcs[i]("tree");
 	}
+	printf("%d\n", get10());
 cleanup:
 	destroy_handles(handles);
 	return 0;
