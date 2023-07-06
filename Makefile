@@ -1,12 +1,20 @@
-CFLAGS += -Wall -Wextra -Wpedantic
+CFLAGS += -O0 -Wall -Wextra -Wpedantic
 CFLAGS += -Wvla -Wwrite-strings -Waggregate-return -Wfloat-equal
 LDFLAGS += -ldl -L. -lldtest
 
 all: libldtest.a loader modules/test1.so modules/test2.so
 
+loader: loader.c
+	$(CC) loader.c $(CFLAGS) -ldl -L. -lldtest -o loader
+
 libldtest.a: libldtest.a(test.o)
 
+# I know this is redundant, but I can't be bothered to look up makefile syntax rn
+modules/test1.so: modules/test1.c
+	$(CC) modules/test1.c $(CFLAGS) -shared -ldl -L. -lldtest -o modules/test1.so
 
+modules/test2.so: modules/test2.c
+	$(CC) modules/test2.c $(CFLAGS) -shared -ldl -L. -lldtest -o modules/test2.so
 
 %.so: %.c
 	$(CC) -shared -fPIC $(CFLAGS) -o $@ $<

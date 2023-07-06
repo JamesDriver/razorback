@@ -1,7 +1,5 @@
-# copied from:
-# https://github.com/github/gitignore/blob/main/C.gitignore
-
 #main application
+loader
 server
 implant
 term.c

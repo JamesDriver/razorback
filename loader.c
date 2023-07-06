@@ -48,7 +48,7 @@ int load_module(obj_handles *handles, const char *path)
 		// handle should be initialized prior to loading
 		return -1;
 	}
-	handles->data[handles->idx] = dlopen(path, RTLD_LAZY);
+	handles->data[handles->idx] = dlopen(path, RTLD_NOW);
 	if (!handles->data[handles->idx]) {
 		/* fail to load the library */
 		fprintf(stderr, "Error for file %s: %s\n", path, dlerror());
@@ -135,6 +135,7 @@ int main(void)
 
 	int (*funcs[2])(const char *);
 
+	printf("%d\n", get10());
 	for (size_t i = 0; i < handles->idx; i++) {
 		*(void **)(&funcs[i]) = dlsym(handles->data[i], "test_func");
 		if (!funcs[i]) {
@@ -144,7 +145,6 @@ int main(void)
 		}
 		funcs[i]("tree");
 	}
-	printf("%d\n", get10());
 cleanup:
 	destroy_handles(handles);
 	return 0;

@@ -2,5 +2,5 @@
 
 int get10()
 {
-	return 10;
+	return 4;
 }

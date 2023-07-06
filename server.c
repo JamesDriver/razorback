@@ -47,7 +47,7 @@ int load_module(obj_handles *handles, const char *path)
 		// handle should be initialized prior to loading
 		return -1;
 	}
-	handles->data[handles->idx] = dlopen(path, RTLD_LAZY);
+	handles->data[handles->idx] = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 	if (!handles->data[handles->idx]) {
 		/* fail to load the library */
 		fprintf(stderr, "Error for file %s: %s\n", path, dlerror());
