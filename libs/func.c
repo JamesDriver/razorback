@@ -1,27 +1,50 @@
 #include "func.h"
 
-int disp_help(int argc, char **argv) {
-	printf("Available Commands: \n");
-	for (int i = 0; i < func_ct; i++) {
-		printf(" %s\n", func_names[i]);
+int init_cmds(shell_cmds **cmds)
+{
+	if (!cmds) {
+		return -1; // todo: err code
 	}
 }
 
-int list_implants(int argc, char **argv) {
-	printf("listing implants\n");
-	return 0;
+int load_shell_cmds(shell_cmds *cmds, void *mod_handle)
+{
+	if (!cmds || !mod_handle) {
+		return -1; // todo: err code
+	}
+	int (*init_func)(shell_cmds *, size_t *) = dlsym(mod_handle, "module_init");
+	if (!init_func) {
+		return -1; // todo: err code
+	}
+	shell_cmds *module_cmds;
+	size_t module_cmd_ct;
+	init_func(&module_cmds, &module_cmd_ct);
+	for (size_t i = 0; i < module_cmd_ct; i++) {
+	}
 }
 
-int use_implant(int argc, char **argv) {
-	printf("attempting to use implant");
-	return 0;
+shell_cmds *init_shell_cmds()
+{
+	shell_cmds *scmds = malloc(sizeof(*scmds));
+	if (!scmds) {
+		return NULL;
+	}
+	scmds->cmds = NULL;
+	scmds->idx  = 0;
+	return scmds;
 }
 
-int server_listen(int argc, char **argv) {
-	return 0;
-}
-
-int portfwd(int argc, char **argv) {
-	printf("attempting to forward on implant");
-	return 0;
+shell_cmd *init_shell_cmd(char *name, char *help, cmd_fp *cmd)
+{
+	if (!name || !help || !cmd) {
+		return NULL;
+	}
+	shell_cmd *scmd = malloc(sizeof(*scmd));
+	if (!scmd) {
+		return NULL;
+	}
+	scmd->name = name;
+	scmd->help = help;
+	scmd->cmd  = cmd;
+	return scmd;
 }

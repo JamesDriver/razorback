@@ -1,11 +1,17 @@
-all: implant server
 
-server: server.c libs/shell.o libs/func.o libs/net.o
 
-implant: implant.c libs/net.o
+
+all: server modules/test.so #implant
+
+modules/test.so: modules/test.c
+	$(CC) modules/test.c $(CFLAGS) -shared -fPIC -ldl -o modules/test.so
+
+server: server.c libs/modload.o libs/shell.o
+
+# implant: implant.c libs/net.o
 
 clean:
-	rm -f *.o implant server libs/*.o
+	rm -f *.o implant server libs/*.o modules/*.so
 
 
 # CFLAGS += -O0 -Wall -Wextra -Wpedantic

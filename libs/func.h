@@ -5,24 +5,25 @@
 #include "net.h"
 #include <stdio.h>
 
-int disp_help(int argc, char **argv);
+// function pointer type
+typedef int (*cmd_fp)(int argc, char **argv);
 
-int list_implants(int argc, char **argv);
+typedef struct {
+	char *name;
+	char *help;
+	cmd_fp *cmd;
+} shell_cmd;
 
-int use_implant(int argc, char **argv); //implant use <id/name>
+// realloc for every command because there are probably not going to be that many commands
+typedef struct {
+	shell_cmd *cmds;
+	size_t idx;
+} shell_cmds;
 
-int name_implant(int argc, char **argv); //implant name <id> <new_name> & rename
+int init_cmds(shell_cmds **cmds);
 
-int server_listen(int argc, char **argv); //both listen and listen -d
+int load_shell_cmds(shell_cmds *cmds, void *mod_handle);
 
-int portfwd(int argc, char **argv); //forward and forward -r (remove)
-
-int exec(int argc, char **argv); //exec cmd on implant
-
-static int (*funcs[])(int argc, char **argv) = { &disp_help, &list_implants,
-						 &use_implant, &portfwd,
-						 &server_listen };
-static char *func_names[] = { "help", "list", "use", "portfwd", "listen" };
-static int func_ct = sizeof(func_names) / sizeof(func_names[0]);
-
+shell_cmds *init_shell_cmds();
+shell_cmd *init_shell_cmd();
 #endif

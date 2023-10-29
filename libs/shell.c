@@ -1,16 +1,38 @@
 #include "shell.h"
+#include "modload.h"
+#include "func.h"
+
+// filled with argc, argv for easy execution
+typedef struct {
+	fnptr_t fptr; // function to execute with arguments
+	int argc; // arg count
+	char **argv; // args
+} command_t;
 
 void shell_init(void);
 
 static char *get_line(void);
 
-static int exec_command(command *c);
-
 static void autocomplete(char *buff, int *sz, int *pos);
 
-static command *parse_command(char *buff);
+static command_t *parse_command(char *buff);
 
-void shell_init(void) {
+static void cmd_destroy(command_t *c);
+
+static command_t *cmd_init();
+/*
+TODO:
+( ) - autocomplete
+( ) - handling for return code (ret_code) so user can query it
+( ) - capture ctrl + c (free mem before exit)
+( ) - check for memory leaks
+*/
+
+void shell_init(void)
+{
+	command_t *cmd = NULL;
+	char *line     = NULL;
+	int ret_code   = 0;
 	// set stdin to stop buffering
 	static struct termios oldtio, newtio;
 	tcgetattr(0, &oldtio);
@@ -20,10 +42,10 @@ void shell_init(void) {
 	tcsetattr(0, TCSANOW, &newtio);
 
 	printf("Welcome to Razorback, a tunneling framework written in C.\n");
-	int status;
+
 	while (1) {
 		printf("> ");
-		char *line = get_line();
+		line = get_line();
 		if (!line) {
 			printf("Invalid Input\n");
 			continue;
@@ -31,82 +53,58 @@ void shell_init(void) {
 		if (strlen(line) == 0) {
 			continue;
 		}
-		command *c = parse_command(line);
-		if (c) {
-			exec_command(c);
+		cmd = parse_command(line);
+		if (!cmd) {
+			printf("error occurred. maybe add error handling you stupid idiot\n");
 			continue;
-		} else {
+		} else if (!cmd->fptr) {
 			printf("command not found: %s\n", line);
 			continue;
+		} else {
+			ret_code = (cmd->fptr)(cmd->argc, cmd->argv);
 		}
+		cmd_destroy(cmd);
+		free(line);
 	}
 	tcsetattr(0, TCSANOW, &oldtio);
 }
 
-static int exec_command(command *c) {
+static command_t *cmd_init()
+{
+	command_t *c = NULL;
+
+	c = malloc(sizeof(*c));
+	if (!c)
+		return NULL;
+	c->argv = malloc(sizeof(char *) * TOKENS_CT);
+	if (!c->argv) {
+		cmd_destroy(c);
+		return NULL;
+	}
+	c->fptr = NULL;
+	c->argc = 0;
+	return c;
+}
+
+static void cmd_destroy(command_t *c)
+{
 	if (!c) {
-		return NULL_CMD;
+		return;
 	}
-	if (!c->exec) {
-		return NULL_CMD_EXEC;
+	if (c->argv) {
+		for (int i = 0; i < c->argc; i++) {
+			free(c->argv[i]);
+		}
 	}
-	return (c->exec)(c->argc, c->argv);
+	free(c->argv);
+	free(c);
 }
 
-static void autocomplete(char *buff, int *sz, int *pos) {
-	if (!buff || !sz || !pos) {
-		return;
-	}
-	if (*pos < 1) {
-		return;
-	}
-	char **words = malloc(sizeof(*words) * 8);
-	if (!words) {
-		return;
-	}
-	size_t idx = 0, cap = 8;
-	for (int i = 0; i < func_ct; i++) {
-		if (strlen(func_names[i]) < *pos) {
-			continue;
-		}
-		if (0 == strncmp(buff, func_names[i], *pos)) {
-			if (idx == cap) {
-				cap *= 2;
-				char **tmp =
-					realloc(words, sizeof(*words) * cap);
-				if (!tmp) {
-					free(words);
-					return;
-				}
-				words = tmp;
-			}
-			words[idx] = func_names[i];
-			idx++;
-		}
-	}
-	if (idx == 1) {
-		printf("%s", words[0] + *pos);
-		size_t w_sz = strlen(words[0] + *pos);
-		if (*sz < *pos + w_sz + 1) {
-			char *tmp = realloc(buff, *pos + w_sz + 1);
-			if (!tmp) {
-				free(words);
-				return;
-			}
-			buff = tmp;
-			*sz = *pos + w_sz + 1;
-		}
-		strncat(buff, words[0] + *pos, w_sz);
-	}
-	if (idx > 1) {
-	}
-	free(words);
-}
-
-static char *get_line(void) {
+static char *get_line(void)
+{
 	int buff_sz = CL_BUFF_SZ;
-	int pos = 0;
-	char *buff = malloc(sizeof(char) * buff_sz);
+	int pos	    = 0;
+	char *buff  = malloc(sizeof(char) * buff_sz);
 	int ch;
 
 	if (!buff) {
@@ -120,7 +118,9 @@ static char *get_line(void) {
 			free(buff);
 			return NULL;
 		} else if (ch == '\t') {
-			autocomplete(buff, &buff_sz, &pos);
+			// autocomplete(buff, &buff_sz, &pos);
+			// could redraw here?
+			// how to go back up?
 			continue;
 		} else if (ch == 127) {
 			if (pos < 1) {
@@ -155,46 +155,83 @@ static char *get_line(void) {
 	return buff;
 }
 
-static command *parse_command(char *buff) {
+static command_t *parse_command(char *buff)
+{
 	if (!buff) {
 		return NULL;
 	}
-	int pos = strlen(buff);
-	command *c = NULL;
-	char *token;
-	char **tokens = malloc(sizeof(char *) * TOKENS_CT);
-	int t_cap = TOKENS_CT, t_idx = 0;
-	for (int i = 0; i < func_ct; i++) {
-		int func_len = strlen(func_names[0]);
-		if (func_len > pos) {
-			continue;
-		}
-		if (0 == strncmp(func_names[i], buff, func_len)) {
-			pos = 0;
-			c = malloc(sizeof(*c));
-			c->exec = funcs[i];
-			token = strtok(buff, DELIM);
-			while (token != NULL) {
-				tokens[t_idx] = token;
-				t_idx++;
-
-				if (t_idx >= t_cap) {
-					char **t_tmp =
-						realloc(tokens, t_cap * 2);
-					if (!t_tmp) {
-						free(tokens);
-						free(buff);
-						free(c);
-						return NULL;
-					}
-					tokens = t_tmp;
-				}
-				token = strtok(NULL, DELIM);
-			}
-			c->argc = t_idx;
-			c->argv = tokens;
-			break;
-		}
+	int t_cap    = TOKENS_CT;
+	command_t *c = cmd_init();
+	if (!c) {
+		return NULL;
 	}
+
+	char *curr_tok = strtok(buff, DELIM);
+	while (curr_tok != NULL) {
+		c->argv[c->argc] = strdup(curr_tok);
+		c->argc++;
+
+		if (c->argc >= t_cap) {
+			char **tmp = realloc(c->argv, t_cap * 2);
+			if (!tmp) {
+				cmd_destroy(c);
+				return NULL;
+			}
+			c->argv = tmp;
+		}
+		curr_tok = strtok(NULL, DELIM);
+	}
+	if (c->argc > 0)
+		c->fptr = get_func(c->argv[0]);
 	return c;
 }
+
+// static void autocomplete(char *buff, int *sz, int *pos)
+// {
+// 	if (!buff || !sz || !pos) {
+// 		return;
+// 	}
+// 	if (*pos < 1) {
+// 		return;
+// 	}
+// 	char **words = malloc(sizeof(*words) * 8);
+// 	if (!words) {
+// 		return;
+// 	}
+// 	size_t idx = 0, cap = 8;
+// 	for (int i = 0; i < func_ct; i++) {
+// 		if (strlen(func_names[i]) < *pos) {
+// 			continue;
+// 		}
+// 		if (0 == strncmp(buff, func_names[i], *pos)) {
+// 			if (idx == cap) {
+// 				cap *= 2;
+// 				char **tmp = realloc(words, sizeof(*words) * cap);
+// 				if (!tmp) {
+// 					free(words);
+// 					return;
+// 				}
+// 				words = tmp;
+// 			}
+// 			words[idx] = func_names[i];
+// 			idx++;
+// 		}
+// 	}
+// 	if (idx == 1) {
+// 		printf("%s", words[0] + *pos);
+// 		size_t w_sz = strlen(words[0] + *pos);
+// 		if (*sz < *pos + w_sz + 1) {
+// 			char *tmp = realloc(buff, *pos + w_sz + 1);
+// 			if (!tmp) {
+// 				free(words);
+// 				return;
+// 			}
+// 			buff = tmp;
+// 			*sz  = *pos + w_sz + 1;
+// 		}
+// 		strncat(buff, words[0] + *pos, w_sz);
+// 	}
+// 	if (idx > 1) {
+// 	}
+// 	free(words);
+// }
