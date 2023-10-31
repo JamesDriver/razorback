@@ -24,6 +24,37 @@ static int funcs_init();
 static int func_register(fnptr_t func, const char *name);
 static int is_shared_obj(const char *filename);
 
+/*
+maybe refactor later so that instead of name and func being different
+arrays, funcs is a ** so that each func is contiguous in memory
+also, dlclose maybe??
+*/
+
+int list_funcs(char ***list, size_t *length)
+{
+	size_t fl_cap = 8;
+	size_t fl_sz  = 0;
+	char **flist  = malloc(sizeof(*flist) * fl_cap);
+	if (!flist) {
+		return -1;
+	}
+	for (; fl_sz < funcs->func_idx; fl_sz++) {
+		if (fl_sz == fl_cap) {
+			fl_cap *= 2;
+			char **tmp = realloc(flist, fl_cap);
+			if (!tmp) {
+				// TODO: free all here
+				return -1;
+			}
+			flist = tmp;
+		}
+		flist[fl_sz] = strdup(funcs->name[fl_sz]);
+	}
+	*list	= flist;
+	*length = fl_sz;
+	return 0;
+}
+
 fnptr_t get_func(const char *name)
 {
 	if (!funcs) {

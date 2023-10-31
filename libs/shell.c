@@ -13,7 +13,7 @@ void shell_init(void);
 
 static char *get_line(void);
 
-static void autocomplete(char *buff, int *sz, int *pos);
+static char *autocomplete(char *buff);
 
 static command_t *parse_command(char *buff);
 
@@ -102,9 +102,10 @@ static void cmd_destroy(command_t *c)
 
 static char *get_line(void)
 {
-	int buff_sz = CL_BUFF_SZ;
-	int pos	    = 0;
-	char *buff  = malloc(sizeof(char) * buff_sz);
+	int pos		  = 0;
+	size_t buff_sz	  = CL_BUFF_SZ;
+	char *completions = NULL;
+	char *buff	  = malloc(sizeof(char) * buff_sz);
 	int ch;
 
 	if (!buff) {
@@ -118,9 +119,15 @@ static char *get_line(void)
 			free(buff);
 			return NULL;
 		} else if (ch == '\t') {
-			// autocomplete(buff, &buff_sz, &pos);
-			// could redraw here?
-			// how to go back up?
+			buff[pos]	 = '\0';
+			char *completion = autocomplete(buff);
+			if (!completion)
+				continue;
+			size_t c_len = strlen(completion);
+			for (; pos < c_len; pos++) {
+				buff[pos] = completion[pos];
+				printf("%c", completion[pos]);
+			}
 			continue;
 		} else if (ch == 127) {
 			if (pos < 1) {
@@ -186,52 +193,34 @@ static command_t *parse_command(char *buff)
 	return c;
 }
 
-// static void autocomplete(char *buff, int *sz, int *pos)
-// {
-// 	if (!buff || !sz || !pos) {
-// 		return;
-// 	}
-// 	if (*pos < 1) {
-// 		return;
-// 	}
-// 	char **words = malloc(sizeof(*words) * 8);
-// 	if (!words) {
-// 		return;
-// 	}
-// 	size_t idx = 0, cap = 8;
-// 	for (int i = 0; i < func_ct; i++) {
-// 		if (strlen(func_names[i]) < *pos) {
-// 			continue;
-// 		}
-// 		if (0 == strncmp(buff, func_names[i], *pos)) {
-// 			if (idx == cap) {
-// 				cap *= 2;
-// 				char **tmp = realloc(words, sizeof(*words) * cap);
-// 				if (!tmp) {
-// 					free(words);
-// 					return;
-// 				}
-// 				words = tmp;
-// 			}
-// 			words[idx] = func_names[i];
-// 			idx++;
-// 		}
-// 	}
-// 	if (idx == 1) {
-// 		printf("%s", words[0] + *pos);
-// 		size_t w_sz = strlen(words[0] + *pos);
-// 		if (*sz < *pos + w_sz + 1) {
-// 			char *tmp = realloc(buff, *pos + w_sz + 1);
-// 			if (!tmp) {
-// 				free(words);
-// 				return;
-// 			}
-// 			buff = tmp;
-// 			*sz  = *pos + w_sz + 1;
-// 		}
-// 		strncat(buff, words[0] + *pos, w_sz);
-// 	}
-// 	if (idx > 1) {
-// 	}
-// 	free(words);
-// }
+static char *autocomplete(char *buff)
+{
+	if (!buff) {
+		return NULL;
+	}
+
+	char *completion   = NULL;
+	char **completions = NULL;
+	size_t cl_sz	   = 0;
+	size_t buff_sz	   = strlen(buff);
+
+	if (0 != list_funcs(&completions, &cl_sz))
+		goto cleanup;
+
+	for (int i = 0; i < cl_sz; i++) {
+		if (0 == strncmp(buff, completions[i], buff_sz)) {
+			if (completion == NULL) {
+				completion = strdup(completions[i]);
+			} else {
+				completion = NULL;
+				break;
+			}
+		}
+	}
+cleanup:
+	for (int i = 0; i < cl_sz; i++) {
+		free(completions[i]);
+	}
+	free(completions);
+	return completion;
+}
