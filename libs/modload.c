@@ -10,7 +10,7 @@ enum {
 };
 
 typedef struct {
-	size_t func_ct;
+	size_t func_cap;
 	size_t func_idx;
 	int (**func)(int, char **);
 	const char **name;
@@ -43,8 +43,7 @@ int list_funcs(char ***list, size_t *length)
 			fl_cap *= 2;
 			char **tmp = realloc(flist, fl_cap);
 			if (!tmp) {
-				// TODO: free all here
-				return -1;
+				goto cleanup;
 			}
 			flist = tmp;
 		}
@@ -53,6 +52,14 @@ int list_funcs(char ***list, size_t *length)
 	*list	= flist;
 	*length = fl_sz;
 	return 0;
+cleanup:
+	for (int i = 0; i < fl_sz; i++) {
+		free(flist[i]);
+	}
+	free(flist);
+	*length = 0;
+	*list	= NULL;
+	return -1;
 }
 
 fnptr_t get_func(const char *name)
@@ -145,7 +152,7 @@ int load_modules(const char *dir_path)
 
 static int funcs_init()
 {
-	if (funcs) {
+	if (funcs) { // singleton
 		return 0;
 	}
 	funcs = malloc(sizeof(funcs_t));
@@ -162,7 +169,7 @@ static int funcs_init()
 		free(funcs);
 		return -1;
 	}
-	funcs->func_ct	= F_START_SZ;
+	funcs->func_cap = F_START_SZ;
 	funcs->func_idx = 0;
 	return 0;
 }
@@ -178,7 +185,20 @@ static int func_register(fnptr_t func, const char *name)
 	if (get_func(name)) {
 		return -2;
 	}
-	// TODO: realloc
+	if (funcs->func_cap >= funcs->func_idx) {
+		const char **tmp_name = realloc(funcs->name, sizeof(*tmp_name) * funcs->func_cap * 2);
+		if (!tmp_name) {
+			return -3;
+		}
+		int (**tmp_func)(int, char **) = realloc(funcs->func, sizeof(*tmp_func) * funcs->func_cap * 2);
+		if (!tmp_func) {
+			free(tmp_name);
+			return -3;
+		}
+		funcs->func_cap *= 2;
+		funcs->func = tmp_func;
+		funcs->name = tmp_name;
+	}
 	funcs->func[funcs->func_idx] = func;
 	funcs->name[funcs->func_idx] = name;
 	funcs->func_idx++;

@@ -29,10 +29,12 @@ static int test1(int argc, char *argv[])
 
 static int test2(int argc, char *argv[])
 {
-	if (!argv)
-		printf("no argv");
 	printf("test2\n");
 	printf("%d\n", argc);
+	if (!argv) {
+		printf("no argv");
+		return 0;
+	}
 	for (int i = 0; i < argc; i++)
 		printf("%s\n", argv[i]);
 	return 0;
