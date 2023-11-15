@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <errno.h>
+#include "builtins.h"
 #include "modload.h"
 
 enum {
@@ -171,14 +172,15 @@ static int funcs_init()
 	}
 	funcs->func_cap = F_START_SZ;
 	funcs->func_idx = 0;
+	void *frptr	= &func_register; // doing this for -werror. not gonna check if not null bc I said so
+	load_builtins(frptr);
 	return 0;
 }
 
 static int func_register(fnptr_t func, const char *name)
 {
-	if (!funcs) {
-		return -1;
-	}
+	if (!funcs)
+		funcs_init();
 	if (!func || !name) {
 		return -1;
 	}

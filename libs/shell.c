@@ -20,6 +20,7 @@ static command_t *parse_command(char *buff);
 static void cmd_destroy(command_t *c);
 
 static command_t *cmd_init();
+
 /*
 TODO:
 ( ) - autocomplete

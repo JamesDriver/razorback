@@ -1,21 +1,23 @@
-MODULES := $(wildcard modules/*.c)
-MODULES := $(subst .c,.so,$(MODULES))
+SERVERMODULES := $(wildcard moduleserver/*.c)
+SERVERMODULES := $(subst .c,.so,$(SERVERMODULES))
 # OBJFILES := $(subst $(SRCDIR),$(OBJDIR),$(SRCFILES:%.c=%.o))
 
-all: server $(MODULES)
+all: server $(SERVERMODULES)
 
-modules/%.so: modules/%.c
+moduleserver/%.so: moduleserver/%.c
 	$(CC) $< $(CFLAGS) -shared -fPIC -ldl -o $@
 
-server: server.c libs/modload.o libs/shell.o
+server: server.c libs/modload.o libs/shell.o libs/builtins.o
 
-implant.o: implant.c # libs/net.o
+implant: implant.c libs/net.o
 
-tmpimplant.o: implant.o modules/implant.so
-	objcopy --add-section .mod1=modules/implant.so --set-section-flags .mod1=noload,readonly implant.o tmpimplant.o 
+# implant.o: implant.c # libs/net.o
 
-implant: tmpimplant.o
-	$(CC) tmpimplant.o -o implant
+# tmpimplant.o: implant.o modules/implant.so
+# 	objcopy --add-section .mod1=modules/implant.so --set-section-flags .mod1=noload,readonly implant.o tmpimplant.o 
+
+# implant: tmpimplant.o
+# 	$(CC) tmpimplant.o -o implant
 
 test:
 	gcc implant.c -c -o test.o
@@ -24,7 +26,7 @@ test:
 	gcc test2.o -o test
 
 clean:
-	rm -f *.o implant server libs/*.o modules/*.so
+	rm -f *.o implant server libs/*.o modules*/*.so
 
 
 # CFLAGS += -O0 -Wall -Wextra -Wpedantic
