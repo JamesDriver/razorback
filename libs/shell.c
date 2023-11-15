@@ -207,6 +207,10 @@ static char *autocomplete(char *buff)
 	if (0 != list_funcs(&completions, &cl_sz))
 		goto cleanup;
 
+	// TODO: fix autocomplete so it will show completions.
+	// TODO: fix autocomplete so it will complete up until completions no longer match
+	//	i.e. im(tab)    //completions: implant-list implant-use
+	//   	 implant-   //completed up to end of completion match
 	for (int i = 0; i < cl_sz; i++) {
 		if (0 == strncmp(buff, completions[i], buff_sz)) {
 			if (completion == NULL) {

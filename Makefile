@@ -1,14 +1,27 @@
+MODULES := $(wildcard modules/*.c)
+MODULES := $(subst .c,.so,$(MODULES))
+# OBJFILES := $(subst $(SRCDIR),$(OBJDIR),$(SRCFILES:%.c=%.o))
 
+all: server $(MODULES)
 
-
-all: server modules/test.so #implant
-
-modules/test.so: modules/test.c
-	$(CC) modules/test.c $(CFLAGS) -shared -fPIC -ldl -o modules/test.so
+modules/%.so: modules/%.c
+	$(CC) $< $(CFLAGS) -shared -fPIC -ldl -o $@
 
 server: server.c libs/modload.o libs/shell.o
 
-# implant: implant.c libs/net.o
+implant.o: implant.c # libs/net.o
+
+tmpimplant.o: implant.o modules/implant.so
+	objcopy --add-section .mod1=modules/implant.so --set-section-flags .mod1=noload,readonly implant.o tmpimplant.o 
+
+implant: tmpimplant.o
+	$(CC) tmpimplant.o -o implant
+
+test:
+	gcc implant.c -c -o test.o
+	echo "this is my special datathis is my special data" >mydata
+	objcopy --add-section .mydata=mydata --set-section-flags .mydata=noload,readonly test.o test2.o
+	gcc test2.o -o test
 
 clean:
 	rm -f *.o implant server libs/*.o modules/*.so
